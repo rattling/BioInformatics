@@ -10,7 +10,7 @@ fout='C:/Users/John/Documents/GitHub/BioInformatics/out.txt'
 
 #OK, this is nice.  Reads the file into a dict and stores multiple values as a list
 #This allows duplication of key value pairs
-
+edgeCount = 0
 graph = {}
 with open(myfile) as f:
     for line in f:
@@ -19,7 +19,11 @@ with open(myfile) as f:
        line=line.rstrip()
        x=line.split(" -> ")
        y=x[1].split(",")  
-       graph[x[0]]=y       
+       graph[x[0]]=y     
+       edgeCount = edgeCount + len(y)
+       
+check1=graph.get("2181", "none")
+       
 
 #print (graph.get("952", "none"))
 
@@ -32,59 +36,79 @@ with open(myfile) as f:
 
 #first go is just to let it wend its way back to start.  So its cycle0 from the 
 #example.  And can just use first outnode rather than randomize!
-euler=[]
-use=[]
+
+#LOOP TO DO ONE ATTEMPT AT A PATH
+
+def buildPath(euler, graphLeft, currNode):    
+    myLen = len(graphLeft[currNode])    
+    while myLen > 0:    
+        #Print the out nodes for the first node
+        #print (graphLeft.get(currNode, "none"))        
+        #2. Take the first outnode from current node as the next node
+        nextNode = graphLeft.get(currNode, "none")[0]       
+        check3=graphLeft.get("2181", "none")
+        #Remove the edge to the out node from the current node;
+        graphLeft[currNode] = graphLeft[currNode][1:]    
+        myLen = len(graphLeft[nextNode])
+        euler.append(nextNode)
+        currNode = nextNode
+    return euler, graphLeft
+
+def changeStart(euler, graphLeft):
+    for idx, key in enumerate(euler):
+        if len (graphLeft.get(key, "none"))> 0:
+            newStart = key
+            newIndex = idx
+            break
+    #euler = shift(euler, idx)
+    return newStart, newIndex
 
 def arb(dictionary):
     return next(iter(dictionary))
 
-#Gotta start somewhere
+def shift(l, n):
+    return l[n:] + l[:n]
+
+
+#Program Start
+euler=[]
+use=[]
+
+graphLeft = graph.copy()
+print ("Goal is to traverse this many edges:" + str(edgeCount))
 startNode = arb(graph)
-#Add the first node to the euler path
 euler.append(startNode)
+euler, graphLeft = buildPath(euler, graphLeft, startNode)
+counter = 1
 
-#Print the out nodes for the first node
-print (graph.get(startNode, "none"))
+print ("Eulerian Path now contains this many edges:" + str(len(euler)))
+print("Eulerian Path")
+print (', '.join(euler)) 
 
-#Take the first outnode from start node as the current node
-currNode = graph.get(startNode, "none")[0]
-#Add it to the euler path
-euler.append(currNode)
-print(currNode)
-#Remove the out node from the start node;
-graph[startNode] = graph[startNode][1:]
-#Print its out nodes
-#print (graph.get(currNode, "none"))
+check2=graph.get("2181", "none")
 
-#REPEAT THIS
-#Take the first outnode from current node as the current node
-nextNode = graph.get(currNode, "none")[0]
-#Add it to the euler path
-euler.append(nextNode)
-#print(nextNode)
-#Remove the out node from the current node;
-graph[currNode] = graph[currNode][1:]
-#Print its out nodes
-#print (graph.get(currNode, "none"))
+while len(euler) < edgeCount:
+    counter = counter + 1
+    print ("Counter = " + str(counter))  
+    startNode, startIndex = changeStart(euler, graphLeft)
+    del euler[-1]    
+    euler = shift(euler, startIndex) 
+    euler.append(startNode)        
+    euler, graphLeft = buildPath(euler, graphLeft, startNode)     
+    print ("Eulerian Path now contains this many edges:" + str(len(euler)))
+    print("Eulerian Path")
+    print    
 
-#REPEATING
-#Take the first outnode from current node as the current node
-currNode = nextNode
-nextNode = graph.get(currNode, "none")[0]
-#Add it to the euler path
-euler.append(nextNode)
-#print(nextNode)
-#Remove the out node from the current node;
-graph[currNode] = graph[currNode][1:]
-#Print its out nodes
-#print (graph.get(currNode, "none"))
+fo = open(fout, "w")
+fo.write('->'.join(euler)) 
+fo.close()
+ 
 
-print ("Values Left for Nodes already traversed")
-print (graph.get("0", "none"))
-print (graph.get("2180", "none"))
-print (graph.get("2179", "none"))
-print (graph.get("2181", "none"))
-print("Eulerian Path So Far")
-print (', '.join(euler))
+
+
+
+
+
+
 
 
